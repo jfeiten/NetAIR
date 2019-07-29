@@ -1,0 +1,65 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<style>
+.button {
+  background-color: #555555;
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+input[type=text] {
+  width: 10%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 3px solid #ccc;
+  -webkit-transition: 0.5s;
+  transition: 0.5s;
+  outline: none;
+}
+
+input[type=text]:focus {
+  border: 3px solid #555;
+}
+
+</style>
+</head>
+<body>
+<h1> RNAI - R Network Analysis Interface 0.0 </h1>
+<p> Inteface de Análise de Redes </p>
+<h2> Importar dados </h2>
+
+<form action="/createnetworks" method="get">
+    <div>
+	   
+       <label for="myFile">Escolha o arquivo do seu banco de dados:</label>
+       <input type="file" id="myFile" name="file">
+	   </br>
+	   <label for="desfecho_input">Escolha a variável pela qual você quer gerar as redes:</label>
+       <input type="text" id="desfecho_input" name="desfecho_input">
+	   
+	   
+    </div>
+    
+<h2> Parâmetros para a comparação das redes </h2>
+
+    <div>
+        <label for="int">Número de permutações: </label>
+        <input type="number" id="int" name="it"/>
+    </div>
+	</br>
+    <div class="button">
+        <button class="button" type="submit">Submeter</button>
+    </div>
+<script>var x = document.getElementById("myFile").value;  
+</form>
+</body>
+</html>

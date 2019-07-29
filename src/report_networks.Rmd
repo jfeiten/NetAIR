@@ -1,0 +1,183 @@
+---
+title: "Report Network Analysis"
+output:
+  html_document:
+    theme: united
+    toc: TRUE
+    number_sections: TRUE
+    highlight: tango
+    df_print: paged
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+#load("network_session.Rdata")
+objs <- readRDS("network_session.rds")
+attach(objs)
+```
+```{r}
+library(qgraph)
+library(d3heatmap)
+library(purrr)
+```
+
+# Importante
+As variáveis abaixo foram excluídas por terem níveis raros.
+```{r}
+data.frame("Variáveis_níveis_raros" = as.character(permutations_results$near_zero))
+```
+
+# Resultados
+
+## Rede `r paste(desfecho, 0)`
+```{r}
+plot(netmeasures$net1)
+
+node_names <- netmeasures$net1$graphAttributes$Nodes$names
+data.frame("Número" = 1:length(node_names), node_names)
+
+```
+
+## Rede `r paste(desfecho, 1)`
+```{r}
+
+plot(netmeasures$net2)
+
+node_names <- netmeasures$net2$graphAttributes$Nodes$names
+data.frame("Número" = 1:length(node_names), node_names)
+
+```
+
+## Permutações
+
+### Força global
+A diferença na força global das redes dos conjuntos de dados reais foi de `r netmeasures$res$glstrinv.real` com valor p de `r netmeasures$res$glstrinv.pval`.    
+
+```{r}
+# glstrinv.real
+# The difference in global strength between the networks of the observed (real) data sets.
+# netmeasures$res$glstrinv.real
+
+# glstrinv.pval
+# The p value resulting from the permutation test concerning difference in global strength.
+```
+
+### Força global das redes  
+```{r}
+df_strength <- data.frame("Força_global" = netmeasures$res$glstrinv.sep)
+rownames(df_strength) <- c("Network_1", "Network_2")
+df_strength
+```
+
+```{r}
+### glstrinv.perm
+#The difference in global strength between the networks of the permutated data sets.
+#hist(netmeasures$res$glstrinv.perm)
+```
+
+```{r}
+### nwinv.real
+# The value of the maximum difference M in any of the edge weights of the observed networks.
+# netmeasures$res$nwinv.real
+
+### nwinv.perm
+#The values of the maximum difference in edge weights of the permuted networks.
+#Não mostrado.
+#nwinv.perm <- netmeasures$res$nwinv.perm
+
+### nwinv.pval
+#The p values resulting from the permutation test concerning the maximum difference in edge
+#weights. When it=1000, there will be 1000 p values that form the reference distribution.
+#netmeasures$res$nwinv.pval
+```
+
+
+### Valores das diferenças nos pesos dos conectores
+
+```{r}
+### einv.real
+# The value of the difference in edge weight of the observed networks (multiple values if more
+# edges are called to test).
+
+einv.real <- netmeasures$res$einv.real
+colnames(einv.real) <- colnames(data1)
+rownames(einv.real) <- colnames(data1)
+d3heatmap(einv.real, colors = "Oranges")
+```
+
+
+### Interações significativas
+Apenas as interações com p corrigido por _Benjamini-Hochberg são mostradas abaixo.
+
+```{r}
+### einv.pvals
+# TheBenjamini-Hochberg corrected p values per edge from the permutation test concerning differences in edges weights (if 0.00 = < 0.01)  
+
+sig_int <-  netmeasures$res$einv.pvals[netmeasures$res$einv.pvals$`p-value` <= 0.05, ]
+sig_int
+
+#nrow(sig_int)/nrow(netmeasures$res$einv.pvals)*100
+
+
+```
+
+```{r}
+### einv.perm
+# The values of the difference in edge weight of the permuted networks. Only if test.edges =
+# TRUE.  
+# Não mostrado.
+#netmeasures$res$einv.perm
+```
+
+# Mais informações
+## Parâmetros 
+### <code> mgm package </code>
+*Levels*  
+```{r}
+vars_levels
+
+```
+k = 2  
+lambdaSel = "CV"  
+lambdaFolds = 10  
+ruleReg = "AND"
+
+### Parâmetros do code adaptado de NCT package
+Numero de permutações: `r n_perm`.  
+Seed:  `r seed`.  
+
+## Dataset inicial inserido
+```{r}
+dt_merged
+```
+
+## Dimensões do dataset inicial
+Número de linhas: `r nrow(dt_merged)`.  
+Número de colunas (variáveis): `r ncol(dt_merged)`.  
+
+## Frequência dos níveis das _features_
+```{r}
+map(dt_merged, table)
+```
+
+## Tipo das _features_
+```{r}
+vars_type <- as.factor(vars_type)
+levels(vars_type) <- c("Categórica", "Gaussiana", "Poisson")
+data.frame("Variáveis" = colnames(data1), "Tipo" = vars_type)
+```
+
+## _Datasets_ dividos pelo desfecho
+```{r}
+df <- rbind(dim(data1), dim(data2))
+df <- as.data.frame(df)
+colnames(df) <- c("Número de linhas", "Número de variáveis")
+rownames(df) <- c("Dataset 1", "Dataset 2")
+```
+
+# Interações ordenadas pelo valor de p  
+```{r}
+netmeasures$res$einv.pvals[order(netmeasures$res$einv.pvals$`p-value`), ]
+```
