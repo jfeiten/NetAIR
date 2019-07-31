@@ -1,5 +1,5 @@
 divideData <- function(dt_merged, desfecho){
-  # dt deve ter o desfecho na primeira coluna
+  browser()
   # o desfecho deve ser numerico e dicotomico 0 ou 1
   require(purrr)
   
@@ -85,6 +85,7 @@ changeValue <- function(var, current_value, new_value){
 }
 
 calculateNetworkMeasures <- function(data1, data2, n_iterations, vars_type, vars_levels){
+  browser()
   require(mgm)
   require(qgraph)
   ##### Invariance measures #####

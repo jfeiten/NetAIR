@@ -34,7 +34,7 @@ function(){
 #* @get /createnetworks
 #* @html
 function(file = "", desfecho_input = "", it = 2){
-  
+  browser()
   require(readr)
   # copy .rmd ----
   folder_name <<- gsub(":", "", format(Sys.time(), "%X-%d%b%Y"))
@@ -66,9 +66,9 @@ function(file = "", desfecho_input = "", it = 2){
   
   # Baixa o banco sem missings
   dt_merged <- read.csv(path, header = TRUE, stringsAsFactors = FALSE)
+  
   vars_type <- dt_merged[1, ]
   vars_type <- as.character(vars_type)
-  
   vars_type <- vars_type[-which(colnames(dt_merged) == desfecho)]
   
   dt_merged <- dt_merged[-1, ]
@@ -83,12 +83,12 @@ function(file = "", desfecho_input = "", it = 2){
   #permutations_results$near_zero
   
   m <- match(permutations_results$near_zero, colnames(data1))
-  print(m)
-  
-  data1 <- data1[, -m]
-  data2 <- data2[, -m]
-  
-  vars_type <- vars_type[-m]
+  if (length(m) != 0) {
+    data1 <- data1[, -m]
+    data2 <- data2[, -m]
+    vars_type <- vars_type[-m]
+    
+  }
   
   vars_levels <- getVarsLevels(data1)
   vars_levels
@@ -123,7 +123,9 @@ function(){
   
   file_path <- paste0("cache/", folder_name, "/report_networks.Rmd")
   rmarkdown::render(file_path, encoding = "UTF-8")
-  read_file("src/report_networks.html")
+  
+  file_path2 <- paste0("cache/", folder_name, "/report_networks.html")
+  read_file(file_path2)
 }
 
 
