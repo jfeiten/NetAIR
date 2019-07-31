@@ -34,7 +34,7 @@ function(){
 #* @get /createnetworks
 #* @html
 function(file = "", desfecho_input = "", it = 2){
-  browser()
+  
   require(readr)
   # copy .rmd ----
   folder_name <<- gsub(":", "", format(Sys.time(), "%X-%d%b%Y"))
