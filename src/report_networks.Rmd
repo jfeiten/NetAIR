@@ -1,53 +1,51 @@
 ---
 title: "Report Network Analysis"
+subtitle: "NetAIR v0.0"
 output:
   html_document:
     theme: united
     toc: TRUE
+    toc_float: TRUE
     number_sections: TRUE
     highlight: tango
     df_print: paged
 ---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
-
-```{r}
+```{r loadObject, message=FALSE}
 #load("network_session.Rdata")
 objs <- readRDS("network_session.rds")
+
 attach(objs)
 ```
-```{r}
+
+```{r loadLibraries, message=FALSE}
 library(qgraph)
 library(d3heatmap)
 library(purrr)
+library(ggplot2)
 ```
 
 # Importante
 As variáveis abaixo foram excluídas por terem níveis raros.
-```{r}
+```{r important}
 data.frame("Variáveis_níveis_raros" = as.character(permutations_results$near_zero))
 ```
 
 # Resultados
 
-## Rede `r paste(desfecho, 0)`
-```{r}
+## Rede `r paste(desfecho, 0)` | `r paste(desfecho, 1)` 
+```{r plotNets, fig.show='hold', fig.align='center', out.width = "50%"}
 plot(netmeasures$net1)
-
-node_names <- netmeasures$net1$graphAttributes$Nodes$names
-data.frame("Número" = 1:length(node_names), node_names)
+plot(netmeasures$net2)
 
 ```
 
-## Rede `r paste(desfecho, 1)`
 ```{r}
-
-plot(netmeasures$net2)
-
-node_names <- netmeasures$net2$graphAttributes$Nodes$names
+node_names <- netmeasures$net1$graphAttributes$Nodes$names
 data.frame("Número" = 1:length(node_names), node_names)
-
 ```
 
 ## Permutações
@@ -62,18 +60,28 @@ A diferença na força global das redes dos conjuntos de dados reais foi de `r n
 
 # glstrinv.pval
 # The p value resulting from the permutation test concerning difference in global strength.
+
 ```
 
 ### Força global das redes  
-```{r}
+```{r globalStrength}
 df_strength <- data.frame("Força_global" = netmeasures$res$glstrinv.sep)
 rownames(df_strength) <- c("Network_1", "Network_2")
 df_strength
+
 ```
 
-```{r}
+```{r histogramGlobalStrength}
 ### glstrinv.perm
 #The difference in global strength between the networks of the permutated data sets.
+
+df <- data.frame("glstrinv.perm" = netmeasures$res$glstrinv.perm)
+library(ggplot2)
+p <- ggplot(df, aes(x = glstrinv.perm)) + geom_histogram(bins = 20) + theme_classic() + geom_vline(aes(xintercept = netmeasures$res$glstrinv.real),
+            color="orange", linetype="dashed", size=1)
+p
+
+
 #hist(netmeasures$res$glstrinv.perm)
 ```
 
@@ -108,19 +116,23 @@ d3heatmap(einv.real, colors = "Oranges")
 ```
 
 
-### Interações significativas
-Apenas as interações com p corrigido por _Benjamini-Hochberg são mostradas abaixo.
+### Lista de interações significativas
+Apenas as interações com p corrigido por _Benjamini-Hochberg_ menores do que 0.05 são mostradas abaixo.
 
 ```{r}
 ### einv.pvals
-# TheBenjamini-Hochberg corrected p values per edge from the permutation test concerning differences in edges weights (if 0.00 = < 0.01)  
+# The Benjamini-Hochberg corrected p values per edge from the permutation test concerning differences in edges weights (if 0.00 = < 0.01)  
 
 sig_int <-  netmeasures$res$einv.pvals[netmeasures$res$einv.pvals$`p-value` <= 0.05, ]
 sig_int
 
 #nrow(sig_int)/nrow(netmeasures$res$einv.pvals)*100
+```
 
+```{r}
+int_names <- paste(sig_int$Var1, sig_int$Var2, sep = " <--> ")
 
+sig_ind <- data.frame("x" = match(sig_int$Var1, colnames(data1)), "y" = match(sig_int$Var2, colnames(data1)))
 ```
 
 ```{r}
@@ -129,6 +141,30 @@ sig_int
 # TRUE.  
 # Não mostrado.
 #netmeasures$res$einv.perm
+
+getEinvPerm <- function(x, y, einv.perm, einv.real){
+  int_perm <- einv.perm[x, y, ]
+  int_real <- einv.real[x, y]
+  return(list(int_perm, int_real))
+}
+
+
+int_values_list <- map2(sig_int$Var1, sig_int$Var2, einv.perm = netmeasures$res$einv.perm, einv.real = netmeasures$res$einv.real, getEinvPerm)
+
+#names(int_values_list) <- int_names
+plotHistogram <- function(int_values, interaction_name){
+  require(ggplot2)
+  
+  df <- data.frame("einv.perm" = int_values[[1]])
+  
+  p <- ggplot(df, aes(x = einv.perm)) + geom_histogram(bins = 20) + theme_classic() +    geom_vline(aes(xintercept = int_values[[2]]), color="orange", linetype="dashed", size=1) + ggtitle(interaction_name) 
+
+  p
+
+}
+
+histograms <- map2(int_values_list, int_names, plotHistogram)
+histograms
 ```
 
 # Mais informações
@@ -137,7 +173,6 @@ sig_int
 *Levels*  
 ```{r}
 vars_levels
-
 ```
 k = 2  
 lambdaSel = "CV"  
@@ -169,12 +204,13 @@ levels(vars_type) <- c("Categórica", "Gaussiana", "Poisson")
 data.frame("Variáveis" = colnames(data1), "Tipo" = vars_type)
 ```
 
-## _Datasets_ dividos pelo desfecho
+## _Datasets_ divididos pelo desfecho
 ```{r}
 df <- rbind(dim(data1), dim(data2))
 df <- as.data.frame(df)
 colnames(df) <- c("Número de linhas", "Número de variáveis")
 rownames(df) <- c("Dataset 1", "Dataset 2")
+df
 ```
 
 # Interações ordenadas pelo valor de p  
