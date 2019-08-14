@@ -128,19 +128,87 @@ function(){
   read_file(file_path2)
 }
 
-
-#* Plot a histogram
-#* @png
-#* @get /plot
-function() {
-    rand <- rnorm(100)
-    hist(rand)
+#* Open page create one network
+#* @get /startone
+#* @html
+function(){
+  require(readr)
+  read_file("start_one.html")
 }
 
-#* Return the sum of two numbers
-#* @param a The first number to add
-#* @param b The second number to add
-#* @post /sum
-function(a, b) {
-    as.numeric(a) + as.numeric(b)
+#* Read databases and create one network
+#* @param file Dataset file in .csv
+#* @get /createonenetwork
+#* @html
+function(file = ""){
+  
+  require(readr)
+  require(mgm)
+  require(qgraph)
+  
+  # copy .rmd ----
+  folder_name <<- gsub(":", "", format(Sys.time(), "%X-%d%b%Y"))
+  
+  dir.create(paste0("cache/", folder_name))
+  
+  # identify the folders
+  current.folder <- "src"
+  new.folder <- paste0("cache/", folder_name)
+  new.folder
+  
+  # find the files that you want
+  list.of.files <- list.files(current.folder, "report_one_network.Rmd", full = TRUE)
+  list.of.files
+  
+  # copy the files to the new folder
+  file.copy(list.of.files, new.folder)
+  
+  # create networks ----
+  # define seed
+  seed <- 2501
+  set.seed(seed)
+  
+  path <- paste0("data/", file)
+  
+  # Baixa o banco sem missings
+  dt_merged <- read.csv(path, header = TRUE, stringsAsFactors = FALSE)
+  
+  vars_type <- dt_merged[1, ]
+  vars_type <- as.character(vars_type)
+  
+  vars_levels <- getVarsLevels(dt_merged)
+  vars_levels
+  
+  dt_merged <- dt_merged[-1, ]
+  dt <- map_df(dt_merged, function(x){as.numeric(as.character(x))})
+  
+  fit_mgm <- mgm(data = dt, type = vars_type, 
+                  levels = vars_levels, k = 2, lambdaSel = "CV", 
+                  lambdaFolds = 10, ruleReg = "AND")
+  
+  net <- qgraph(fit_mgm$pairwise$wadj, edge.color = fit_mgm$pairwise$edgecolor,
+               nodeNames = colnames(dt), legend = TRUE, legend.cex = 0.1, label.cex = 3, vsize = 3, layout = "spring")
+  
+  
+  objs <- list(seed, dt_merged, vars_type, vars_levels, fit_mgm, net)
+  names(objs) <- list("seed", "dt_merged", "vars_type", "vars_levels", "fit_mgm", "net")
+  
+  saveRDS(objs, file = paste0("cache/", folder_name, "/one_network_session.rds"))
+  
+  # read finished page ----
+  read_file("finished_create_one_network_report.html")
+}
+
+#* Create results report
+#* @get /createonenetworkreport
+#* @html
+function(){
+  require(readr)
+  require(rmarkdown)
+  
+  file_path <- paste0("cache/", folder_name, "/report_one_network.Rmd")
+  rmarkdown::render(file_path, encoding = "UTF-8")
+  
+  file_path2 <- paste0("cache/", folder_name, "/report_one_network.html")
+  read_file(file_path2)
 }

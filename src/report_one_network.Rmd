@@ -1,0 +1,57 @@
+---
+title: "Report Network Analysis"
+subtitle: "NetAIR v0.0"
+output:
+  html_document:
+    theme: united
+    toc: TRUE
+    toc_float: TRUE
+    number_sections: TRUE
+    highlight: tango
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+```{r loadObject, message=FALSE}
+#load("network_session.Rdata")
+objs <- readRDS("one_network_session.rds")
+
+attach(objs)
+```
+
+```{r loadLibraries, message=FALSE}
+library(qgraph)
+library(d3heatmap)
+library(purrr)
+library(ggplot2)
+```
+
+# Resultados
+
+## Rede
+```{r plotNets, fig.show='hold', fig.align='center', out.width = "50%"}
+plot(net)
+```
+
+```{r}
+node_names <- net$graphAttributes$Nodes$names
+data.frame("Número" = 1:length(node_names), node_names)
+```
+
+## Dimensões do dataset inicial
+Número de linhas: `r nrow(dt_merged)`.  
+Número de colunas (variáveis): `r ncol(dt_merged)`.  
+
+## Frequência dos níveis das _features_
+```{r}
+map(dt_merged, table)
+```
+
+## Tipo das _features_
+```{r}
+vars_type <- as.factor(vars_type)
+levels(vars_type) <- c("Categórica", "Gaussiana", "Poisson")
+data.frame("Variáveis" = colnames(dt_merged), "Tipo" = vars_type)
+```
