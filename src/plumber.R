@@ -8,7 +8,6 @@
 #
 
 library(plumber)
-source("src/func.R")
 
 #* @apiTitle Network Analysis API
 
@@ -16,8 +15,9 @@ source("src/func.R")
 #* @get /start
 #* @html
 function(){
+  source("../src/func.R")
   require(readr)
-  read_file("index.html")
+  read_file("../index.html")
 }
 
 
@@ -25,6 +25,8 @@ function(){
 #* @get /get
 function(){
   getwd()
+  folder_name <<- gsub(":", "", format(Sys.time(), "%X-%d%b%Y"))
+  dir.create(paste0("cache/", folder_name), recursive = TRUE)
 }
 
 #* Read databases and do permutations between networks
@@ -39,16 +41,21 @@ function(file = "", desfecho_input = "", it = 2){
   # copy .rmd ----
   folder_name <<- gsub(":", "", format(Sys.time(), "%X-%d%b%Y"))
   
-  dir.create(paste0("cache/", folder_name))
+  print(getwd())
+  
+  dir.create(paste0("../cache/", folder_name), recursive = TRUE)
+  print(getwd())
   
   # identify the folders
   current.folder <- "src"
-  new.folder <- paste0("cache/", folder_name)
+  new.folder <- paste0("../cache/", folder_name)
   new.folder
   
   # find the files that you want
-  list.of.files <- list.files(current.folder, "report_networks.Rmd", full = TRUE)
-  list.of.files
+  list.of.files <- list.files(pattern = "report_networks.Rmd", full = TRUE)
+  print("List files")
+  print(list.of.files)
+  print(list.files())
   
   # copy the files to the new folder
   file.copy(list.of.files, new.folder)
@@ -61,7 +68,7 @@ function(file = "", desfecho_input = "", it = 2){
   
   
   
-  path <- paste0("data/", file)
+  path <- paste0("../data/", file)
   desfecho <- desfecho_input
   
   # Baixa o banco sem missings
@@ -108,10 +115,10 @@ function(file = "", desfecho_input = "", it = 2){
   names(objs) <- list("seed", "n_perm", "desfecho", "dt_merged", "vars_type", "vars_levels", "div_obj", 
                       "data1", "data2", "permutations_results", "netmeasures")
   
-  saveRDS(objs, file = paste0("cache/", folder_name, "/network_session.rds"))
+  saveRDS(objs, file = paste0("../cache/", folder_name, "/network_session.rds"))
   
   # read finished page ----
-  read_file("finished_create_report.html")
+  read_file("../finished_create_report.html")
 }
 
 #* Create results report
@@ -121,10 +128,10 @@ function(){
   require(readr)
   require(rmarkdown)
   
-  file_path <- paste0("cache/", folder_name, "/report_networks.Rmd")
-  rmarkdown::render(file_path, encoding = "UTF-8")
+  file_path <- paste0("../cache/", folder_name, "/report_networks.Rmd")
+  rmarkdown::render(file_path, encoding = "UTF-8", )
   
-  file_path2 <- paste0("cache/", folder_name, "/report_networks.html")
+  file_path2 <- paste0("../cache/", folder_name, "/report_networks.html")
   read_file(file_path2)
 }
 
