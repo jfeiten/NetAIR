@@ -23,7 +23,7 @@ attach(objs)
 
 ```{r loadLibraries, message=FALSE}
 library(qgraph)
-library(d3heatmap)
+
 library(purrr)
 library(ggplot2)
 ```
@@ -112,7 +112,7 @@ p
 einv.real <- netmeasures$res$einv.real
 colnames(einv.real) <- colnames(data1)
 rownames(einv.real) <- colnames(data1)
-d3heatmap(einv.real, colors = "Oranges")
+einv.real
 ```
 
 
